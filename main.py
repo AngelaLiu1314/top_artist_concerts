@@ -2,6 +2,8 @@ import pandas as pd
 import requests
 import re
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+import os
 
 
 def get_billboard_top100_artists():
@@ -64,9 +66,12 @@ def get_event_detail_info(artist, event):
 
 
 def get_ticket_master_concerts(artists):
+    load_dotenv()
+    ticketmaster_api_key = os.getenv("ticketmaster_api_key")
+
     all_events = []
     for artist in artists:
-        url = f'https://app.ticketmaster.com/discovery/v2/events.json?keyword={artist}&classificationName=music&countryCode=US&apikey=tGH1pww1hL8vibSfiVt2nEMjuLDLmm0E'       
+        url = f'https://app.ticketmaster.com/discovery/v2/events.json?keyword={artist}&classificationName=music&countryCode=US&apikey={ticketmaster_api_key}'       
         json_data = requests.get(url).json()
         if ('_embedded' in json_data):
             embedded_data = json_data['_embedded']
