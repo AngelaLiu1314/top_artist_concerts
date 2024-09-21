@@ -83,6 +83,7 @@ def main():
     artists = get_billboard_top100_artists()
     allConcerts = get_ticket_master_concerts(artists)
     df = pd.DataFrame(allConcerts)
+    df.to_csv("top_artists'_concerts")
 
     choice = ""
     while choice == "":
@@ -96,4 +97,3 @@ def main():
             print(f"Data on {artist_name.lower()}'s concerts has been gathered.")
 if __name__ == "__main__":
     main()
-
