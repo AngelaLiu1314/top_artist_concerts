@@ -90,7 +90,7 @@ def main():
     artists = get_billboard_top100_artists()
     allConcerts = get_ticket_master_concerts(artists)
     df = pd.DataFrame(allConcerts)
-    df.to_csv("top_artists'_concerts", index=False)
+    df.to_csv("top_artists'.csv", index=False)
 
 
     print (f"This week's Billboard top 100 artists are: \n{artists}\n")
