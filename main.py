@@ -5,18 +5,18 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import os
 
-
+#This section scrapes data from the Billboard Top 100 page and gets the artists name.
 def get_billboard_top100_artists():
     billboard_url = 'https://www.billboard.com/charts/artist-100/'
     try:
         response = requests.get(billboard_url)
 
-        if response.status_code != 200:
+        if response.status_code != 200: #This tests whether the url works
             print(f'failed to get the webpage: {response.status_code}')
             return []
         
         soup = BeautifulSoup(response.text,'html.parser')
-       
+        #This section scrapes for the artist name.
         title_tags = soup.find_all("h3", class_=re.compile("^c-title a-no-trucate"), id="title-of-a-story")
         artists = [title.text.strip() for title in title_tags]
         return artists
@@ -24,13 +24,15 @@ def get_billboard_top100_artists():
     except Exception as e:
         print(f'An error has occured: {e}')
         return []
-
+    
+#This is a helper method to ensure that an object exists in the json created for a given key.
 def get_value_or_default(key, data):
     if (key in data):
         return data[key]
     else:
         return ''
-    
+
+#This section defines all values collected for any concert.     
 def get_event_detail_info(artist, event):
     name = get_value_or_default('name', event)
     date = get_value_or_default('localDate', event['dates']['start'])
@@ -65,10 +67,10 @@ def get_event_detail_info(artist, event):
 
     return event_detail
 
-
+#This section uses the Ticketmaster api to pull all concert information for each artist.
 def get_ticket_master_concerts(artists):
     load_dotenv()
-    ticketmaster_api_key = os.getenv("ticketmaster_api_key")
+    ticketmaster_api_key = os.getenv("ticketmaster_api_key") #This is to hide the api key. To input your own key, please see the readme file.
 
     all_events = []
     for artist in artists:
@@ -83,15 +85,13 @@ def get_ticket_master_concerts(artists):
                         if ('priceRanges' in events[i]):
                             all_events.append(get_event_detail_info(artist, events[i]))
     return all_events
-            
-    
+
 def main():
     print ("Please wait. Gathering data...\n")
     artists = get_billboard_top100_artists()
     allConcerts = get_ticket_master_concerts(artists)
     df = pd.DataFrame(allConcerts)
-    df.to_csv("top_artists'.csv", index=False)
-
+    df.to_csv("top_artists'_concerts.csv", index=False)
 
     print (f"This week's Billboard top 100 artists are: \n{artists}\n")
     choice = ""
@@ -104,5 +104,6 @@ def main():
             df_artist_concert.to_csv(f"{artist_name.lower()}'s_concerts.csv", index=False)
             choice = "done"
             print(f"Data on {artist_name.lower()}'s concerts has been gathered.")
+
 if __name__ == "__main__":
     main()
