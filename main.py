@@ -25,42 +25,43 @@ def get_billboard_top100_artists():
         print(f'An error has occured: {e}')
         return []
 
+def get_value_or_default(key, data):
+    if (key in data):
+        return data[key]
+    else:
+        return ''
+    
 def get_event_detail_info(artist, event):
-    event_detail = {}
-    name = event['name']
-    date = event['dates']['start']['localDate']
+    name = get_value_or_default('name', event)
+    date = get_value_or_default('localDate', event['dates']['start'])
+    time = get_value_or_default('localTime', event['dates']['start'])
 
-    if ('localTime' in event['dates']['start']):
-        time = event['dates']['start']['localTime']
+    if (len(event['priceRanges'])):
+        currency = get_value_or_default('currency', event['priceRanges'][0])
+        min_price = get_value_or_default('min', event['priceRanges'][0])
+        max_price = get_value_or_default('max', event['priceRanges'][0])
     else:
-        time = 'TBD'
+        currency = min_price = max_price = ''
 
-    currency = event['priceRanges'][0]['currency']
-
-    if (len(event['priceRanges']) and 'min' in event['priceRanges'][0]):
-        min_price = event['priceRanges'][0]['min']
+    if (len(event['_embedded']['venues'])):
+        venue_name = get_value_or_default('name', event['_embedded']['venues'][0])
+        venue_city = get_value_or_default('name', event['_embedded']['venues'][0]['city'])
+        venue_state = get_value_or_default('name', event['_embedded']['venues'][0]['state'])
     else:
-        min_price = 'NA'
+        venue_name = venue_city = venue_state = ''
 
-    if (len(event['priceRanges']) and 'max' in event['priceRanges'][0]):
-        max_price = event['priceRanges'][0]['max']
-    else:
-        max_price = 'NA'
-
-    venue_name = event['_embedded']['venues'][0]['name']
-    venue_city = event['_embedded']['venues'][0]['city']['name']
-    venue_state = event['_embedded']['venues'][0]['state']['name']
-
-    event_detail.update({'artist': artist})
-    event_detail.update({'name': name})
-    event_detail.update({'date': date})
-    event_detail.update({'time': time})
-    event_detail.update({'currency': currency})
-    event_detail.update({'min_price': min_price})
-    event_detail.update({'max_price': max_price})
-    event_detail.update({'venue_name': venue_name})
-    event_detail.update({'venue_city': venue_city})
-    event_detail.update({'venue_state': venue_state})
+    event_detail = {
+        'artist': artist,
+        'name': name,
+        'date': date,
+        'time': time,
+        'currency': currency,
+        'min_price': min_price,
+        'max_price': max_price,
+        'venue_name': venue_name,
+        'venue_city': venue_city,
+        'venue_state': venue_state
+    }
 
     return event_detail
 
@@ -85,19 +86,22 @@ def get_ticket_master_concerts(artists):
             
     
 def main():
+    print ("Please wait. Gathering data...\n")
     artists = get_billboard_top100_artists()
     allConcerts = get_ticket_master_concerts(artists)
     df = pd.DataFrame(allConcerts)
-    df.to_csv("top_artists'_concerts")
+    df.to_csv("top_artists'_concerts", index=False)
 
+
+    print (f"This week's Billboard top 100 artists are: \n{artists}\n")
     choice = ""
     while choice == "":
         artist_name = input("Enter an artist's name: ")
-        df2 = df[df['artist'].str.lower() == artist_name.lower()]
-        if df2.empty == True:
+        df_artist_concert = df[df['artist'].str.lower() == artist_name.lower()]
+        if df_artist_concert.empty == True:
             print('Sorry, this artist is not in the top 100 artists this week, or they do not have any concerts. Try another artist')
         else:
-            df2.to_csv(f"{artist_name.lower()}'s_concerts.csv", index=False)
+            df_artist_concert.to_csv(f"{artist_name.lower()}'s_concerts.csv", index=False)
             choice = "done"
             print(f"Data on {artist_name.lower()}'s concerts has been gathered.")
 if __name__ == "__main__":
